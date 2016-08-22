@@ -95,7 +95,9 @@ class Documents(BaseCatalogListingTab):
 
     grok.name('tabbedview_view-documents')
 
-    types = ['opengever.document.document', 'ftw.mail.mail']
+    types = ['opengever.document.document',
+             'opengever.document.note',
+             'ftw.mail.mail']
 
     columns = (
 
