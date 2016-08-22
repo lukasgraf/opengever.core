@@ -19,4 +19,11 @@
         template="templates/trix_input.pt"
         />
 
+  <z3c:widgetTemplate
+        mode="display"
+        widget=".widgets.ITrixWidget"
+        layer="z3c.form.interfaces.IFormLayer"
+        template="templates/trix_display.pt"
+        />
+
 </configure>
