@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<object name="opengever.document.note" meta_type="Dexterity FTI"
+        i18n:domain="opengever.document" xmlns:i18n="http://xml.zope.org/namespaces/i18n">
+
+  <!-- Basic metadata -->
+  <property name="title" i18n:translate="">Note</property>
+  <property name="description" i18n:translate=""></property>
+  <property name="icon_expr"></property>
+  <property name="allow_discussion">False</property>
+  <property name="global_allow">True</property>
+
+  <!-- schema interface -->
+  <property name="schema">opengever.document.note.INoteSchema</property>
+
+  <!-- class used for content items -->
+  <property name="klass">opengever.document.note.Note</property>
+
+  <!-- add permission -->
+  <property name="add_permission">opengever.document.AddNote</property>
+
+  <!-- enabled behaviors -->
+  <property name="behaviors" purge="False">
+    <element value="collective.dexteritytextindexer.behavior.IDexterityTextIndexer" />
+    <element value="opengever.base.behaviors.creator.ICreator" />
+    <element value="opengever.document.behaviors.name_from_title.IDocumentNameFromTitle" />
+    <element value="opengever.trash.trash.ITrashable" />
+    <element value="opengever.base.behaviors.sequence.ISequenceNumberBehavior" />
+    <element value="plone.app.lockingbehavior.behaviors.ILocking" />
+    <element value="opengever.document.behaviors.IBaseDocument" />
+  </property>
+
+  <!-- View information -->
+  <property name="default_view">view</property>
+  <property name="immediate_view">view</property>
+  <property name="default_view_fallback">False</property>
+  <property name="view_methods">
+    <element value="view"/>
+  </property>
+
+  <!-- Method aliases -->
+  <alias from="(Default)" to="(selected layout)"/>
+  <alias from="edit" to="@@edit"/>
+  <alias from="sharing" to="@@sharing"/>
+  <alias from="view" to="@@view"/>
+
+  <!-- Actions -->
+  <action title="Edit" action_id="edit" category="object"
+          condition_expr="not:object/@@plone_lock_info/is_locked_for_current_user|python:True"
+          url_expr="string:${object_url}/edit" visible="True">
+    <permission value="Modify portal content"/>
+  </action>
+
+</object>
