@@ -4,6 +4,7 @@ from opengever.base.widgets import TrixFieldWidget
 from opengever.document import _
 from opengever.document.base import BaseDocumentMixin
 from opengever.ogds.base.autocomplete_widget import AutocompleteMultiFieldWidget
+from plone.app.textfield import RichText
 from plone.dexterity.content import Container
 from plone.directives import form
 from z3c.relationfield.schema import RelationChoice
@@ -79,3 +80,6 @@ class INoteSchema(form.Schema):
 class Note(Container, BaseDocumentMixin):
     """Class for the note type.
     """
+
+    def digitally_available(self):
+        return True

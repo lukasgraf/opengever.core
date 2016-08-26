@@ -20,6 +20,14 @@
         />
 
     <browser:page
+        name="view"
+        for="opengever.document.behaviors.IBaseDocument"
+        class=".note_view.NoteView"
+        permission="zope2.View"
+        layer="opengever.base.interfaces.IOpengeverBaseLayer"
+        />
+
+    <browser:page
         name="plone_layout"
         for="opengever.document.behaviors.IBaseDocument"
         permission="zope.Public"
