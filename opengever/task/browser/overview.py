@@ -17,12 +17,10 @@ class Overview(grok.View, GeverTabMixin):
     grok.require('zope2.View')
 
     def documents(self):
-        """ Return containing documents and related documents
-        """
+        """Return containing documents and related documents"""
 
         def _get_documents():
-            """ Return documents in this task and subtasks
-            """
+            """Return documents in this task and subtasks"""
             documents = getToolByName(self.context, 'portal_catalog')(
                 portal_type=['opengever.document.document', 'ftw.mail.mail', ],
                 path=dict(
@@ -32,8 +30,7 @@ class Overview(grok.View, GeverTabMixin):
             return [document.getObject() for document in documents]
 
         def _get_related_documents():
-            """ Return related documents in this task
-            """
+            """Return related documents in this task"""
             # Related documents
             related_documents = []
             for item in self.context.relatedItems:
@@ -111,14 +108,12 @@ class Overview(grok.View, GeverTabMixin):
         return items
 
     def get_css_class(self, item):
-        """Return the sprite-css-class for the given object.
-        """
+        """Return the sprite-css-class for the given object."""
         css = get_css_class(item)
         return '%s %s' % ("rollover-breadcrumb", css)
 
     def get_sub_tasks(self):
-        """ Return the subtasks
-        """
+        """Return the subtasks"""
         tasks = self.context.getFolderContents(
             full_objects=True,
             contentFilter={'portal_type': 'opengever.task.task'},
@@ -126,25 +121,22 @@ class Overview(grok.View, GeverTabMixin):
         return [each.get_sql_object() for each in tasks]
 
     def get_containing_task(self):
-        """ Get the parent-tasks if we have one
-        """
+        """Get the parent-tasks if we have one"""
         parent = aq_parent(aq_inner(self.context))
         if ITask.providedBy(parent):
             return parent.get_sql_object()
         return None
 
     def get_predecessor_task(self):
-        """ Get the original task
-        """
+        """Get the original task"""
         return self.context.get_sql_object().predecessor
 
     def get_successor_tasks(self):
-        """ Get the task from which this task was copied
-        """
+        """Get the task from which this task was copied"""
         return self.context.get_sql_object().successors
 
     def render_task(self, item):
-        """ Render the taskobject."""
+        """Render the taskobject."""
 
         if not item:
             return None

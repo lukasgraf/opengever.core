@@ -71,17 +71,16 @@ def propper_string(value):
         return str(value)
 
 
-def journal_entry_factory(context, action, title,
-                          visible=True, comment='', actor=None,
-                          documents=None):
+def journal_entry_factory(
+        context, action, title,
+        visible=True, comment=None, actor=None, documents=None):
     portal_state = getMultiAdapter(
         (context, getRequest()), name=u'plone_portal_state')
     if actor is None:
         actor = portal_state.member().getId()
-    comment = comment == '' and get_change_note(getRequest(), '') or comment
     title = propper_string(title)
     action = propper_string(action)
-    comment = propper_string(comment)
+    comment = propper_string(comment or get_change_note(getRequest(), ''))
 
     action_entry = PersistentDict({'type': action,
                                    'title': title,
@@ -493,13 +492,9 @@ DOCUMENT_FILE_REVERTED = 'Reverted document file'
 
 @grok.subscribe(IBaseDocument, IObjectRevertedToVersion)
 def document_file_reverted(context, event):
-    try:
-        create = event.create_version
-    except AttributeError:
+
+    if not getattr(event, 'create_version', None):
         return
-    else:
-        if not create:
-            return
 
     title = _(u'label_document_file_reverted',
               default=u'Reverte document file to version ${version_id}',

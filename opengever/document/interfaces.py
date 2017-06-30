@@ -65,8 +65,7 @@ class IDocumentSettings(Interface):
 
 
 class ICheckinCheckoutManager(Interface):
-    """Interface for the checkin / checkout manager.
-    """
+    """Interface for the checkin / checkout manager."""
 
     def get_checked_out_by():
         """If the document is checked out, this method returns the userid
@@ -80,8 +79,7 @@ class ICheckinCheckoutManager(Interface):
         """
 
     def checkout():
-        """Checkout the adapted document.
-        """
+        """Checkout the adapted document."""
 
     def is_checked_out_by_current_user():
         """Returns True if the document is checked out by the currently
@@ -99,12 +97,10 @@ class ICheckinCheckoutManager(Interface):
         """
 
     def is_cancel_allowed():
-        """Checks whether the user is able to cancel a checkout.
-        """
+        """Checks whether the user is able to cancel a checkout."""
 
     def cancel():
-        """Cancel the current checkout.
-        """
+        """Cancel the current checkout."""
 
 
 class IDocumentIndexer(Interface):
@@ -113,8 +109,7 @@ class IDocumentIndexer(Interface):
     """
 
     def extract_text():
-        """Extract plain text from the adapted document.
-        """
+        """Extract plain text from the adapted document."""
 
 
 class INoAutomaticInitialVersion(Interface):
