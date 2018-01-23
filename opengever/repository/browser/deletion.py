@@ -26,6 +26,9 @@ class RepositoryDeletionView(BrowserView):
         elif self.request.get('form.buttons.delete'):
             # Made form CSRF save
             if not self.request.method.lower() == 'post':
+                # The response will be empty, we do not need plone.protect
+                # to jump in
+                self.request.response.setHeader('Content-Type', 'text/plain')
                 raise Unauthorized
 
             deleter.delete()
