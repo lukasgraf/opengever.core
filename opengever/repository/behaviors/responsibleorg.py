@@ -1,4 +1,3 @@
-from opengever.ogds.models import UNIT_ID_LENGTH
 from opengever.repository import _
 from plone.autoform.interfaces import IFormFieldProvider
 from plone.supermodel import model
@@ -14,12 +13,11 @@ class IResponsibleOrgUnit(model.Schema):
         fields=['responsible_org_unit'],
         )
 
-    responsible_org_unit = schema.TextLine(
+    responsible_org_unit = schema.Choice(
         title=_(
             u'responsible_org_unit',
             default=u'Responsible organisation unit'),
-        description=u'',
-        max_length=UNIT_ID_LENGTH,
+        vocabulary='opengever.ogds.base.OrgUnitsVocabularyFactory',
         required=False,
         )
 
