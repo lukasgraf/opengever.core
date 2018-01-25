@@ -116,7 +116,7 @@ class FillMeetingTemplate(BrowserView):
 
     def __call__(self):
         sablon = Sablon(self.context)
-        sablon.process(json.dumps(SAMPLE_MEETING_DATA))
+        sablon.process(json.dumps({}))
         assert sablon.is_processed_successfully(), sablon.stderr
 
         response = self.request.response
