@@ -108,7 +108,8 @@ SAMPLE_MEETING_DATA = {
                      'email': None},
                     ],
         'other': [u'Hans M\xfcller', u'Heidi Muster']},
-    'protocol': {'type': u'Protocol'}}
+    'protocol': {'type': u'Protocol'},
+    'iamprettysurethiskeydoesnotexist': 'erich'}
 
 
 class FillMeetingTemplate(BrowserView):
@@ -116,7 +117,7 @@ class FillMeetingTemplate(BrowserView):
 
     def __call__(self):
         sablon = Sablon(self.context)
-        sablon.process(json.dumps({}))
+        sablon.process(json.dumps(SAMPLE_MEETING_DATA))
         assert sablon.is_processed_successfully(), sablon.stderr
 
         response = self.request.response
