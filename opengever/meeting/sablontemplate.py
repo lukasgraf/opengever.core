@@ -1,9 +1,29 @@
 from opengever.document.document import Document
 from opengever.document.document import IDocumentSchema
 from opengever.meeting import _
+from opengever.meeting.browser.sablontemplate import SAMPLE_MEETING_DATA
+from opengever.meeting.sablon import Sablon
 from os.path import join
 from plone.namedfile.field import NamedBlobFile
 from plone.supermodel import model
+import json
+
+VALIDATION_DATA = {
+    'meeting': SAMPLE_MEETING_DATA,
+    'toc': {'toc': []},
+}
+
+
+def sablon_template_is_valid(value):
+    # create the sablon template using the blob file
+    sablon = Sablon(None)
+
+    for template_type, data in VALIDATION_DATA.items():
+        sablon.process(json.dumps(data), namedblobfile=value)
+        if sablon.is_processed_successfully():
+            return True
+
+    return False
 
 
 class ISablonTemplate(IDocumentSchema):
@@ -12,7 +32,8 @@ class ISablonTemplate(IDocumentSchema):
     file = NamedBlobFile(
         title=_(u'label_sablon_template_file', default='File'),
         required=True,
-        )
+        constraint=sablon_template_is_valid,
+    )
 
 
 class SablonTemplate(Document):
