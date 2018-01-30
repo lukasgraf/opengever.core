@@ -62,6 +62,13 @@
 
   <adapter factory=".docprops.ProposalDocPropertyProvider" />
 
+  <browser:page
+      for="opengever.meeting.sablontemplate.ISablonTemplate"
+      name="sablon_upload"
+      class=".form.SablonTemplateFileUploadForm"
+      permission="cmf.ModifyPortalContent"
+      />
+
   <utility
       factory=".vocabulary.ProposalTemplatesForCommitteeVocabulary"
       name="opengever.meeting.ProposalTemplatesForCommitteeVocabulary"

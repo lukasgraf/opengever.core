@@ -1,3 +1,5 @@
+from opengever.document.forms import DocumentFileUploadForm
+from opengever.document.forms import IDocumentFileUploadForm
 from opengever.meeting import is_meeting_feature_enabled
 from z3c.form.interfaces import IDataConverter
 from zExceptions import Unauthorized
@@ -83,3 +85,12 @@ class ModelProxyEditForm(object):
         super(ModelProxyEditForm, self).applyChanges(obj_data)
         # pretend to always change the underlying data
         return True
+
+
+class ISablonTemplateFileUploadForm(IDocumentFileUploadForm):
+    pass
+
+
+class SablonTemplateFileUploadForm(DocumentFileUploadForm):
+
+    schema = ISablonTemplateFileUploadForm

@@ -2,6 +2,7 @@ from ftw.mail.interfaces import IEmailAddress
 from opengever.document.events import FileAttachedToEmailEvent
 from opengever.dossier.behaviors.dossier import IDossierMarker
 from opengever.dossier.events import DossierAttachedToEmailEvent
+from opengever.meeting.sablontemplate import ISablonTemplate
 from opengever.officeconnector import _
 from opengever.officeconnector.helpers import create_oc_url
 from opengever.officeconnector.helpers import is_officeconnector_attach_feature_enabled  # noqa
@@ -204,6 +205,9 @@ class OfficeConnectorCheckoutPayload(OfficeConnectorPayload):
                 payload['checkout'] = '@@checkout_documents'
                 payload['upload-form'] = 'file_upload'
                 payload['upload-api'] = None
+
+                if ISablonTemplate.providedBy(payload.get('document')):
+                    payload['upload-form'] = 'sablon_upload'
 
             else:
                 # Fail per default
