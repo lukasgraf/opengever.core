@@ -47,6 +47,18 @@
       handler=".handlers.configure_committee_container_portlets"
       />
 
+  <subscriber
+      for="opengever.meeting.sablontemplate.ISablonTemplate
+           zope.lifecycleevent.interfaces.IObjectCreatedEvent"
+      handler=".handlers.validate_sablon_template"
+      />
+
+  <subscriber
+      for="opengever.meeting.sablontemplate.ISablonTemplate
+           zope.lifecycleevent.interfaces.IObjectModifiedEvent"
+      handler=".handlers.validate_sablon_template"
+      />
+
   <adapter
       for=".proposal.IProposal"
       provides=".interfaces.IHistory"

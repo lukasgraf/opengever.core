@@ -94,3 +94,7 @@ def configure_committee_container_portlets(container, event):
     """Do not acquire portlets.
     """
     block_context_portlet_inheritance(container)
+
+
+def validate_sablon_template(obj, event):
+    pass
