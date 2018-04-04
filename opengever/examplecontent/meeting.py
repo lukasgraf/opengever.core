@@ -140,11 +140,11 @@ class MeetingExampleContentCreator(object):
         self.create_meetings()
         self.create_proposals()
 
-        api.portal.set_registry_record(
-            'opengever.meeting.interfaces.IMeetingSettings.is_word_implementation_enabled',
-            True)
-        self.create_meetings_word()
-        self.create_proposals_word()
+        # api.portal.set_registry_record(
+        #     'opengever.meeting.interfaces.IMeetingSettings.is_word_implementation_enabled',
+        #     True)
+        # self.create_meetings_word()
+        # self.create_proposals_word()
 
     def create_periods(self):
         create(Builder('period').having(
