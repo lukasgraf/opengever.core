@@ -3,6 +3,7 @@ from ftw.upgrade import UpgradeStep
 from opengever.meeting.sablon import Sablon
 from opengever.ogds.base.utils import get_current_admin_unit
 from os.path import join
+from plone import api
 from plone.i18n.normalizer.interfaces import IIDNormalizer
 from zope.component import getUtility
 import json
@@ -42,6 +43,25 @@ class ProposalMigrator(object):
         self.normalizer = getUtility(IIDNormalizer)
         self.proposal_template = proposal_template
 
+    def migrate(self, proposal):
+        self.generate_word_file(proposal)
+
+    def generate_word_file(self, proposal):
+        sablon = Sablon(self.proposal_template)
+        sablon.process(self.get_json_data(proposal))
+        if sablon.is_processed_successfully():
+            filename = u"{}.docx".format(
+                self.normalizer.normalize(proposal.title))
+            proposal.create_proposal_document(
+                filename=filename,
+                data=sablon.file_data,
+                content_type=MIME_DOCX)
+        else:
+            url = proposal.absolute_url()
+            msg = 'Could not generate sablon document: "{}"'.format(url)
+            logger.error(msg)
+            logger.error(sablon.stderr)
+
     def get_data(self, proposal):
         root = {}
         root['mandant'] = {
@@ -74,27 +94,41 @@ class ProposalMigrator(object):
     def get_json_data(self, proposal):
         return json.dumps(self.get_data(proposal))
 
-    def migrate(self, proposal):
-        sablon = Sablon(self.proposal_template)
-        sablon.process(self.get_json_data(proposal))
-        if sablon.is_processed_successfully():
-            filename = u"{}.docx".format(
-                self.normalizer.normalize(proposal.title))
-            proposal.create_proposal_document(
-                filename=filename,
-                data=sablon.file_data,
-                content_type=MIME_DOCX)
-        else:
-            url = proposal.absolute_url()
-            msg = 'Could not generate sablon document: "{}"'.format(url)
-            logger.error(msg)
-            logger.error(sablon.stderr)
-
 
 class SubmittedProposalMigrator(ProposalMigrator):
     """Generate Word *.docx files for submitted porposals in a committee based
     on their fields and a sablon template.
     """
+    def migrate(self, submitted_proposal):
+        super(SubmittedProposalMigrator, self).migrate(submitted_proposal)
+        self.migrate_excerpts(submitted_proposal)
+
+    def migrate_excerpts(self, submitted_proposal):
+        """Excerpts are now also tracked in a relation list. Before migrating
+        we would only allow one excerpt per proposal. Now there can be
+        multiple. So all we have to do is append the one excerpt to the list
+        of ecxerpts.
+
+        Also the excerpt documents are now stored in the meeting dossier, and
+        no longer inside the proposal.
+        """
+        proposal_model = submitted_proposal.load_model()
+        if not proposal_model.submitted_excerpt_document:
+            return
+
+        if not proposal_model.agenda_item:
+            return
+
+        # this must happen before moving the proposal document into the
+        # meeting dossier as an event relies on the relation from proposal
+        # to document when the word meeting flag is enabled
+        document = proposal_model.submitted_excerpt_document.resolve_document()
+        submitted_proposal.append_excerpt(document)
+
+        meeting = proposal_model.agenda_item.meeting
+        meeting_dossier = meeting.get_dossier()
+        api.content.move(source=document, target=meeting_dossier, safe_id=True)
+
     def get_agenda_item_data(self, submitted_proposal):
         data = super(SubmittedProposalMigrator, self).get_agenda_item_data(
             submitted_proposal)
