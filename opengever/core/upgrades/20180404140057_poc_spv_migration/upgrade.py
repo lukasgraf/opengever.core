@@ -1,17 +1,33 @@
 from . import templates
-from ftw.upgrade import UpgradeStep
+from opengever.core.upgrade import SQLUpgradeStep
 from opengever.meeting.sablon import Sablon
 from opengever.ogds.base.utils import get_current_admin_unit
 from os.path import join
 from plone import api
 from plone.i18n.normalizer.interfaces import IIDNormalizer
+from sqlalchemy.sql import select
+from sqlalchemy.sql.expression import column
+from sqlalchemy.sql.expression import table
 from zope.component import getUtility
+import itertools
 import json
 import logging
 
 
 logger = logging.getLogger('opengever.core')
 MIME_DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+
+
+meeting_excerpts = table(
+    'meeting_excerpts',
+    column('meeting_id'),
+    column('document_id'),
+)
+
+generateddocuments_table = table(
+    'generateddocuments',
+    column('id'),
+)
 
 
 def sanitize_text(text):
@@ -151,15 +167,17 @@ class SubmittedProposalMigrator(ProposalMigrator):
         return data
 
 
-class POCSPVMigration(UpgradeStep):
+class POCSPVMigration(SQLUpgradeStep):
     """POC SPV migration.
     """
-    def __call__(self):
+    def migrate(self):
         self.install_upgrade_profile()
         self.migrate_proposals()
         self.migrate_submitted_proposals()
+        self.remove_meeting_excerpts_relation()
 
     def migrate_proposals(self):
+        """Generate word documents that contain the proposals fields."""
         proposal_template = UpgradeSablonTemplateWrapper(
             templates.load('template-proposal.docx'))
         migrator = ProposalMigrator(proposal_template)
@@ -170,6 +188,9 @@ class POCSPVMigration(UpgradeStep):
             migrator.migrate(proposal)
 
     def migrate_submitted_proposals(self):
+        """Generate word documents that contain the submitteed proposals
+        fields.
+        """
         submitted_proposal_template = UpgradeSablonTemplateWrapper(
             templates.load('template-submittedproposal.docx'))
         migrator = SubmittedProposalMigrator(submitted_proposal_template)
@@ -178,3 +199,25 @@ class POCSPVMigration(UpgradeStep):
                 {'portal_type': 'opengever.meeting.submittedproposal'},
                 'Create submitted proposal documents'):
             migrator.migrate(submitted_proposal)
+
+    def remove_meeting_excerpts_relation(self):
+        """The functionality to generate generic excerpts for a meeting that
+        could include multiple agenda items is no longer available.
+
+        We won't loose information as the excerpt documents will still be in
+        the meeting dossier. Tracking them sparately here is no longer
+        necessary.
+        """
+        # find out which generated documents are meeting excerpts
+        results = self.execute(
+            select([meeting_excerpts.c.document_id])
+        ).fetchall()
+        ids_to_delete = set(itertools.chain(*results))
+
+        # clear relation table
+        self.execute(meeting_excerpts.delete())
+        # remove generated documents that refer to meeting excerpts
+        self.execute(
+            generateddocuments_table.delete().where(
+                generateddocuments_table.c.id.in_(ids_to_delete))
+            )
