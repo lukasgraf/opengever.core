@@ -3,11 +3,13 @@ from opengever.core.upgrade import SQLUpgradeStep
 from opengever.meeting.sablon import Sablon
 from opengever.ogds.base.utils import get_current_admin_unit
 from os.path import join
+from persistent.dict import PersistentDict
 from plone import api
 from plone.i18n.normalizer.interfaces import IIDNormalizer
 from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import column
 from sqlalchemy.sql.expression import table
+from zope.annotation.interfaces import IAnnotations
 from zope.component import getUtility
 import itertools
 import json
@@ -16,6 +18,7 @@ import logging
 
 logger = logging.getLogger('opengever.core')
 MIME_DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+PROPOSAL_DATA_KEY = 'meeting_proposal_fields'
 
 
 meeting_excerpts = table(
@@ -55,12 +58,23 @@ class ProposalMigrator(object):
     """Generate Word *.docx files for porposals in a dossier based on their
     fields and a sablon template.
     """
+    fields = (
+        'legal_basis',
+        'initial_position',
+        'proposed_action',
+        'decision_draft',
+        'publish_in',
+        'disclose_to',
+        'copy_for_attention',
+    )
+
     def __init__(self, proposal_template):
         self.normalizer = getUtility(IIDNormalizer)
         self.proposal_template = proposal_template
 
     def migrate(self, proposal):
         self.generate_word_file(proposal)
+        self.move_fields_to_annotations(proposal)
 
     def generate_word_file(self, proposal):
         sablon = Sablon(self.proposal_template)
@@ -77,6 +91,21 @@ class ProposalMigrator(object):
             msg = 'Could not generate sablon document: "{}"'.format(url)
             logger.error(msg)
             logger.error(sablon.stderr)
+
+    def move_fields_to_annotations(self, proposal):
+        """Remember old html field values in proposal's annotations.
+
+        Then set field values to None to have the same state as if they were
+        created with the word feature flag.
+        """
+        annotations = IAnnotations(proposal)
+        if PROPOSAL_DATA_KEY not in annotations:
+            annotations[PROPOSAL_DATA_KEY] = PersistentDict()
+        field_backup = annotations[PROPOSAL_DATA_KEY]
+
+        for name in self.fields:
+            field_backup[name] = getattr(proposal, name)
+            setattr(proposal, name, None)
 
     def get_data(self, proposal):
         root = {}
@@ -96,15 +125,12 @@ class ProposalMigrator(object):
         the data structre.
         """
         data = {}
-
         data['title'] = proposal.title
-        data['html:legal_basis'] = sanitize_text(proposal.legal_basis)
-        data['html:initial_position'] = sanitize_text(proposal.initial_position)
-        data['html:proposed_action'] = sanitize_text(proposal.proposed_action)
-        data['html:decision_draft'] = sanitize_text(proposal.decision_draft)
-        data['html:publish_in'] = sanitize_text(proposal.publish_in)
-        data['html:disclose_to'] = sanitize_text(proposal.disclose_to)
-        data['html:copy_for_attention'] = sanitize_text(proposal.copy_for_attention)
+
+        for name in self.fields:
+            value = getattr(proposal, name)
+            data_key = 'html:{}'.format(name)
+            data[data_key] = sanitize_text(value)
         return data
 
     def get_json_data(self, proposal):
@@ -115,9 +141,28 @@ class SubmittedProposalMigrator(ProposalMigrator):
     """Generate Word *.docx files for submitted porposals in a committee based
     on their fields and a sablon template.
     """
+
+    fields = ProposalMigrator.fields + (
+        'considerations',
+    )
     def migrate(self, submitted_proposal):
         super(SubmittedProposalMigrator, self).migrate(submitted_proposal)
         self.migrate_excerpts(submitted_proposal)
+
+    def move_fields_to_annotations(self, submitted_proposal):
+        super(SubmittedProposalMigrator, self).move_fields_to_annotations(submitted_proposal)
+
+        model = submitted_proposal.load_model()
+        agenda_item = model.agenda_item
+        if not agenda_item:
+            return
+
+        field_backup = IAnnotations(submitted_proposal)[PROPOSAL_DATA_KEY]
+        field_backup['decision'] = agenda_item.decision
+        field_backup['discussion'] = agenda_item.discussion
+
+        agenda_item.decision = None
+        agenda_item.discussion = None
 
     def migrate_excerpts(self, submitted_proposal):
         """Excerpts are now also tracked in a relation list. Before migrating
