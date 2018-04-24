@@ -1,5 +1,8 @@
 from . import templates
+from opengever.base.command import CreateDocumentCommand
+from opengever.base.oguid import Oguid
 from opengever.core.upgrade import SQLUpgradeStep
+from opengever.meeting.model import AgendaItem
 from opengever.meeting.sablon import Sablon
 from opengever.ogds.base.utils import get_current_admin_unit
 from os.path import join
@@ -18,7 +21,7 @@ import logging
 
 logger = logging.getLogger('opengever.core')
 MIME_DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-PROPOSAL_DATA_KEY = 'meeting_proposal_fields'
+LEGACY_DATA_KEY = 'legacy_meeting_proposal_fields'
 
 
 meeting_excerpts = table(
@@ -99,9 +102,9 @@ class ProposalMigrator(object):
         created with the word feature flag.
         """
         annotations = IAnnotations(proposal)
-        if PROPOSAL_DATA_KEY not in annotations:
-            annotations[PROPOSAL_DATA_KEY] = PersistentDict()
-        field_backup = annotations[PROPOSAL_DATA_KEY]
+        if LEGACY_DATA_KEY not in annotations:
+            annotations[LEGACY_DATA_KEY] = PersistentDict()
+        field_backup = annotations[LEGACY_DATA_KEY]
 
         for name in self.fields:
             field_backup[name] = getattr(proposal, name)
@@ -157,7 +160,7 @@ class SubmittedProposalMigrator(ProposalMigrator):
         if not agenda_item:
             return
 
-        field_backup = IAnnotations(submitted_proposal)[PROPOSAL_DATA_KEY]
+        field_backup = IAnnotations(submitted_proposal)[LEGACY_DATA_KEY]
         field_backup['decision'] = agenda_item.decision
         field_backup['discussion'] = agenda_item.discussion
 
@@ -212,13 +215,94 @@ class SubmittedProposalMigrator(ProposalMigrator):
         return data
 
 
-class POCSPVMigration(SQLUpgradeStep):
-    """POC SPV migration.
+class AdHocAgendaItemMigrator(object):
+    """Generate Word *.docx files for ad-hoc agenda items in the meeting
+    dossier based on its fields and a sablon template.
+    """
+    def __init__(self, ad_hoc_template):
+        self.normalizer = getUtility(IIDNormalizer)
+        self.ad_hoc_template = ad_hoc_template
+
+    def migrate(self, agenda_item):
+        ad_hoc_document = self.generate_word_file(agenda_item)
+
+        if not ad_hoc_document:
+            return
+
+        self.move_fields_to_annotations(agenda_item, ad_hoc_document)
+
+    def generate_word_file(self, agenda_item):
+        meeting_dossier = agenda_item.meeting.get_dossier()
+
+        sablon = Sablon(self.ad_hoc_template)
+        sablon.process(self.get_json_data(agenda_item))
+        if sablon.is_processed_successfully():
+            filename = u"{}.docx".format(
+                self.normalizer.normalize(agenda_item.title))
+
+            ad_hoc_document = CreateDocumentCommand(
+                context=meeting_dossier,
+                filename=filename,
+                data=sablon.file_data,
+                content_type=MIME_DOCX,
+                title=agenda_item.title,
+            ).execute()
+
+            agenda_item.ad_hoc_document_oguid = Oguid.for_object(
+                ad_hoc_document)
+            return ad_hoc_document
+        else:
+            url = agenda_item.meeting.get_url(view='agenda_items/{}'.format(
+                agenda_item.agenda_item_id))
+            msg = 'Could not generate sablon document: "{}"'.format(url)
+            logger.error(msg)
+            logger.error(sablon.stderr)
+
+        return None
+
+    def move_fields_to_annotations(self, agenda_item, ad_hoc_document):
+        """Remember old html field values in document's annotations.
+
+        Then set field values to None to have the same state as if they were
+        created with the word feature flag.
+        """
+        annotations = IAnnotations(ad_hoc_document)
+        if LEGACY_DATA_KEY not in annotations:
+            annotations[LEGACY_DATA_KEY] = PersistentDict()
+        field_backup = annotations[LEGACY_DATA_KEY]
+
+        field_backup['decision'] = agenda_item.decision
+        field_backup['discussion'] = agenda_item.discussion
+
+        agenda_item.decision = None
+        agenda_item.discussion = None
+
+    def get_data(self, agenda_item):
+        agenda_item_data = {}
+        agenda_item_data['title'] = agenda_item.title
+        agenda_item_data['html:decision'] = agenda_item.decision
+        agenda_item_data['html:discussion'] = agenda_item.discussion
+
+        root = {}
+        root['mandant'] = {
+            'name': get_current_admin_unit().title
+        }
+        # keep agenda items list for easier template reusability
+        root['agenda_items'] = [agenda_item_data]
+        return root
+
+    def get_json_data(self, agenda_item):
+        return json.dumps(self.get_data(agenda_item))
+
+
+class MigrateToWordSPV(SQLUpgradeStep):
+    """Migrate to word SPV.
     """
     def migrate(self):
         self.install_upgrade_profile()
         self.migrate_proposals()
         self.migrate_submitted_proposals()
+        self.migrate_ad_hoc_proposals()
         self.remove_meeting_excerpts_relation()
 
     def migrate_proposals(self):
@@ -244,6 +328,16 @@ class POCSPVMigration(SQLUpgradeStep):
                 {'portal_type': 'opengever.meeting.submittedproposal'},
                 'Create submitted proposal documents'):
             migrator.migrate(submitted_proposal)
+
+    def migrate_ad_hoc_proposals(self):
+        ad_hoc_template = UpgradeSablonTemplateWrapper(
+            templates.load('template-ad-hoc.docx'))
+        migrator = AdHocAgendaItemMigrator(ad_hoc_template)
+
+        query = AgendaItem.query.filter(
+            AgendaItem.proposal_id==None, AgendaItem.is_paragraph==False)
+        for agenda_item in query:
+            migrator.migrate(agenda_item)
 
     def remove_meeting_excerpts_relation(self):
         """The functionality to generate generic excerpts for a meeting that
