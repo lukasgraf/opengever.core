@@ -1,4 +1,5 @@
 from . import templates
+from ftw.upgrade import ProgressLogger
 from opengever.base.command import CreateDocumentCommand
 from opengever.base.oguid import Oguid
 from opengever.core.upgrade import SQLUpgradeStep
@@ -326,8 +327,12 @@ class MigrateToWordSPV(SQLUpgradeStep):
 
         query = AgendaItem.query.filter(
             AgendaItem.proposal_id==None, AgendaItem.is_paragraph==False)
-        for agenda_item in query:
-            migrator.migrate(agenda_item)
+        agenda_items = query.all()
+
+        with ProgressLogger('Migrate ad-hoc agenda items', agenda_items) as step:
+            for agenda_item in agenda_items:
+                migrator.migrate(agenda_item)
+                step()
 
     def remove_meeting_excerpts_relation(self):
         """The functionality to generate generic excerpts for a meeting that
