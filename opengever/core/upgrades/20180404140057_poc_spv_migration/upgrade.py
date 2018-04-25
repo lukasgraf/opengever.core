@@ -96,11 +96,8 @@ class ProposalMigrator(object):
             logger.error(sablon.stderr)
 
     def move_fields_to_annotations(self, proposal):
-        """Remember old html field values in proposal's annotations.
+        """Remember old html field values in proposal's annotations."""
 
-        Then set field values to None to have the same state as if they were
-        created with the word feature flag.
-        """
         annotations = IAnnotations(proposal)
         if LEGACY_DATA_KEY not in annotations:
             annotations[LEGACY_DATA_KEY] = PersistentDict()
@@ -108,7 +105,6 @@ class ProposalMigrator(object):
 
         for name in self.fields:
             field_backup[name] = getattr(proposal, name)
-            setattr(proposal, name, None)
 
     def get_data(self, proposal):
         root = {}
@@ -163,9 +159,6 @@ class SubmittedProposalMigrator(ProposalMigrator):
         field_backup = IAnnotations(submitted_proposal)[LEGACY_DATA_KEY]
         field_backup['decision'] = agenda_item.decision
         field_backup['discussion'] = agenda_item.discussion
-
-        agenda_item.decision = None
-        agenda_item.discussion = None
 
     def migrate_excerpts(self, submitted_proposal):
         """Excerpts are now also tracked in a relation list. Before migrating
@@ -273,9 +266,6 @@ class AdHocAgendaItemMigrator(object):
 
         field_backup['decision'] = agenda_item.decision
         field_backup['discussion'] = agenda_item.discussion
-
-        agenda_item.decision = None
-        agenda_item.discussion = None
 
     def get_data(self, agenda_item):
         agenda_item_data = {}
