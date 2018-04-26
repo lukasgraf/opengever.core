@@ -2,6 +2,7 @@ from . import templates
 from ftw.upgrade import ProgressLogger
 from opengever.base.command import CreateDocumentCommand
 from opengever.base.oguid import Oguid
+from opengever.base.security import elevated_privileges
 from opengever.core.upgrade import SQLUpgradeStep
 from opengever.meeting.model import AgendaItem
 from opengever.meeting.sablon import Sablon
@@ -290,11 +291,18 @@ class MigrateToWordSPV(SQLUpgradeStep):
     """Migrate to word SPV.
     """
     def migrate(self):
-        self.install_upgrade_profile()
-        self.migrate_proposals()
-        self.migrate_submitted_proposals()
-        self.migrate_ad_hoc_proposals()
-        self.remove_meeting_excerpts_relation()
+        """Perform the actual migration.
+
+        As various steps may create content where it would not be allowed by
+        the current state (i.e. move or create documents) the whole migration
+        runs with elevated privileges.
+        """
+        with elevated_privileges():
+            self.install_upgrade_profile()
+            self.migrate_proposals()
+            self.migrate_submitted_proposals()
+            self.migrate_ad_hoc_proposals()
+            self.remove_meeting_excerpts_relation()
 
     def migrate_proposals(self):
         """Generate word documents that contain the proposals fields."""
