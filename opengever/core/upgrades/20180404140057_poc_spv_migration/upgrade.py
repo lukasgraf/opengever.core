@@ -337,10 +337,9 @@ class MigrateToWordSPV(SQLUpgradeStep):
             AgendaItem.proposal_id==None, AgendaItem.is_paragraph==False)
         agenda_items = query.all()
 
-        with ProgressLogger('Migrate ad-hoc agenda items', agenda_items) as step:
-            for agenda_item in agenda_items:
-                migrator.migrate(agenda_item)
-                step()
+        for agenda_item in ProgressLogger(
+                'Migrate ad-hoc agenda items', agenda_items):
+            migrator.migrate(agenda_item)
 
     def remove_meeting_excerpts_relation(self):
         """The functionality to generate generic excerpts for a meeting that
