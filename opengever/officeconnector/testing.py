@@ -279,9 +279,6 @@ class OCIntegrationTestCase(IntegrationTestCase):
         connect_xml = payload.get('connect-xml', None)
         self.assertEquals('@@oneoffix_connect_xml', connect_xml)
 
-        checkout_token = payload.get('checkout-url', None)
-        self.validate_checkout_token(user, checkout_token, (document,))
-
     def checkout_document(self, browser, tokens, payload, document):
         """Logs out, uses JWT to check out the document and logs back in."""
         self.assertFalse(document.checked_out_by())
