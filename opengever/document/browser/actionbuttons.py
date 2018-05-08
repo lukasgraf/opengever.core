@@ -57,7 +57,7 @@ class ActionButtonRendererMixin(object):
         opengever.pdfconverter is installed.
         """
         if self.is_preview_supported():
-            return IDocumentSchema.providedBy(self.context)
+            return self.is_document()
         return False
 
     def is_office_connector_editable(self):
@@ -106,6 +106,12 @@ class ActionButtonRendererMixin(object):
                     )
 
         return dc_helper.get_html_tag(**kwargs)
+
+    def is_document(self):
+        return IDocumentSchema.providedBy(self.context)
+
+    def is_oneoffixx_creatable(self):
+        return self.is_document() and self.context.is_oneoffixx_creatable()
 
     def is_attach_to_email_available(self):
         if not is_officeconnector_attach_feature_enabled():
