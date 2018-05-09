@@ -25,6 +25,7 @@ from plone import api
 from plone.app.contentlisting.interfaces import IContentListing
 from plone.app.contentlisting.interfaces import IContentListingObject
 from plone.dexterity.i18n import MessageFactory as pd_mf
+from plone.protect.utils import addTokenToUrl
 from plone.supermodel import model
 from plone.z3cform.layout import FormWrapper
 from Products.Five.browser import BrowserView
@@ -330,6 +331,18 @@ class MeetingView(BrowserView):
 
     def url_zipexport(self):
         return self.model.get_url(view='export-meeting-zip')
+
+    def url_async_zipexport(self):
+        return addTokenToUrl(
+            self.model.get_url(view='async-export-meeting-zip'))
+
+    def url_async_zipexport_poll(self):
+        return addTokenToUrl(
+            self.model.get_url(view='async-export-meeting-zip/completed'))
+
+    def url_async_zipexport_download(self):
+        return addTokenToUrl(
+            self.model.get_url(view='async-export-meeting-zip/download'))
 
     def url_manually_generate_excerpt(self):
         return self.model.get_url(view='generate_excerpt')

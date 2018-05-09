@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
-"POT-Creation-Date: 2018-03-21 17:07+0000\n"
+"POT-Creation-Date: 2018-05-09 15:12+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI +ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -431,6 +431,10 @@ msgstr ""
 msgid "action_generate_excerpt"
 msgstr ""
 
+#: ./opengever/meeting/browser/meetings/templates/meeting-word.pt
+msgid "action_generate_zip"
+msgstr ""
+
 #. Default: "Remove agenda item"
 #: ./opengever/meeting/browser/meetings/meeting.py
 msgid "action_remove_agenda_item"
@@ -464,6 +468,10 @@ msgstr ""
 #. Default: "Return to proposal"
 #: ./opengever/meeting/browser/meetings/meeting.py
 msgid "action_return_excerpt"
+msgstr ""
+
+#: ./opengever/meeting/browser/meetings/templates/meeting-word.pt
+msgid "action_zip_download"
 msgstr ""
 
 #. Default: "Active"
@@ -1258,6 +1266,11 @@ msgstr ""
 msgid "label_meeting_has_agenda_items"
 msgstr ""
 
+#. Default: "Komplettes ZIP vom Meeting"
+#: ./opengever/meeting/browser/meetings/templates/meeting-word.pt
+msgid "label_meeting_zip_file"
+msgstr ""
+
 #. Default: "Member"
 #: ./opengever/meeting/browser/memberships.py
 msgid "label_member"
@@ -1548,7 +1561,6 @@ msgstr ""
 
 #. Default: "Secretary"
 #: ./opengever/meeting/browser/meetings/meeting.py
-#: ./opengever/meeting/browser/meetings/templates/meeting-word.pt
 msgid "meeting_role_secretary"
 msgstr ""
 

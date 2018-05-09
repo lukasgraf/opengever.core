@@ -945,6 +945,41 @@
 
   }
 
+  function asyncZipDownloadHandler() {
+
+    var generateLink = $('.meeting-zip .document-actions .generate');
+    var downloadLink = $('.meeting-zip .document-actions .download');
+
+    function poller(processId){
+      var url = generateLink.data('pollurl');
+
+      $.get(url, {process_id: processId, output_json: true}).done(function(response){
+        var container = $('.async-zip-generation');
+        $('.progress', container).html(response.progress);
+        if (response.progress !== 100)  {
+          console.info(response);
+          setTimeout(function(){
+            poller(processId);
+          }, 500);
+        } else {
+          generateLink.removeClass('fa-spin');
+          downloadLink.show().attr('href', downloadLink.attr('href') + '&process_id=' + processId);
+          $('.meeting-zip .document-created.zip').hide();
+        }
+      });
+    }
+
+    generateLink.on('click', function(event){
+      event.stopPropagation();
+      event.preventDefault();
+      $.get($(this).attr('href')).always(function() {
+        generateLink.addClass('fa-spin');
+      }).done(function(response){
+        poller(response.process_id);
+      });
+    });
+  }
+
   $(function() {
 
     if($("#opengever_meeting_meeting").length) {
@@ -972,6 +1007,8 @@
       notifyContainer.onPin(function() { $(".notifyjs-corner").addClass("sticky"); });
       notifyContainer.onRelease(function() { $(".notifyjs-corner").removeClass("sticky"); });
     });
+
+    asyncZipDownloadHandler();
   });
 
 }(window, window.jQuery, window.Controller, window.EditboxController, window.Pin, window.Handlebars));
