@@ -227,9 +227,7 @@ class TestOfficeconnectorDossierAPIDisabled(OCIntegrationTestCase):
     @browsing
     def test_create_with_oneoffixx(self, browser):
         self.login(self.dossier_responsible, browser)
-        self.document.file = None
-        self.document.as_shadow_document()
 
         with browser.expect_http_error(404):
-            oc_url = self.fetch_document_oneoffixx_oc_url(browser, self.document)
+            oc_url = self.fetch_document_oneoffixx_oc_url(browser, self.shadow_document)
             self.assertIsNone(oc_url)

@@ -27,6 +27,7 @@ from plone.app.testing import login
 from plone.app.testing import SITE_OWNER_NAME
 from plone.app.testing import TEST_USER_ID
 from time import time
+from zope.annotation.interfaces import IAnnotations
 from zope.component.hooks import getSite
 import logging
 import pytz
@@ -993,6 +994,17 @@ class OpengeverContentFixture(object):
             .in_state('task-state-in-progress')
             .relate_to(inactive_document)
             ))
+
+        with self.features('oneoffixx', ):
+            shadow_document = self.register('shadow_document', create(
+                Builder('document')
+                .within(self.dossier)
+                .titled(u'Sch\xe4ttengarten')
+                .as_shadow_document(),
+                ))
+            shadow_document_annotations = IAnnotations(shadow_document)
+            shadow_document_annotations['template-id'] = '2574d08d-95ea-4639-beab-3103fe4c3bc7'
+            shadow_document_annotations['languages'] = [2055]
 
     @staticuid()
     def create_empty_dossier(self):
