@@ -16,6 +16,7 @@ from opengever.base.command import CreateEmailCommand
 from opengever.base.model import create_session
 from opengever.mail.tests import MAIL_DATA
 from opengever.meeting.proposalhistory import BaseHistoryRecord
+from opengever.officeconnector.helpers import get_auth_plugin
 from opengever.ogds.base.utils import ogds_service
 from opengever.testing import assets
 from opengever.testing.helpers import time_based_intids
@@ -40,6 +41,11 @@ class OpengeverContentFixture(object):
         self._lookup_table = {
             'manager': ('user', SITE_OWNER_NAME),
             }
+
+        # Set up a static secret for the JWT plugin
+        jwt_plugin = get_auth_plugin(api.portal.get())
+        jwt_plugin.use_keyring = False
+        jwt_plugin._secret = 'topsecret'
 
         with self.freeze_at_hour(4):
             self.create_units()
