@@ -26,14 +26,6 @@ def reference_number_prefix_default(context):
 
 class IReferenceNumberPrefix(model.Schema):
 
-    model.fieldset(
-        u'common',
-        label=_(u'fieldset_common', default=u'Common'),
-        fields=[
-            u'reference_number_prefix',
-            ],
-        )
-
     reference_number_prefix = schema.TextLine(
         title=_(
             u'label_reference_number_prefix',

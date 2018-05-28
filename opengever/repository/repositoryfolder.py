@@ -20,19 +20,6 @@ class IRepositoryFolderSchema(model.Schema):
     """ A Repository Folder
     """
 
-    model.fieldset(
-        u'common',
-        label=_(u'fieldset_common', default=u'Common'),
-        fields=[
-            u'description',
-            u'valid_from',
-            u'valid_until',
-            u'location',
-            u'referenced_activity',
-            u'former_reference',
-            ],
-        )
-
     description = schema.Text(
         title=_(u'label_description', default=u'Description'),
         description=_(
