@@ -12,6 +12,7 @@
   <permission>opengever.document: Checkin</permission>
   <permission>opengever.document: Checkout</permission>
   <permission>opengever.document: Force Checkin</permission>
+  <permission>opengever.meeting: Add Proposal Comment</permission>
   <permission>opengever.trash: Trash content</permission>
 
   <state
