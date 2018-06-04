@@ -5,6 +5,8 @@ Changelog
 2018.4.0 (unreleased)
 ---------------------
 
+- Add the ability to export repositories as excel files. [Rotonen]
+- Autosize columns on excel exports. [Rotonen]
 - Implement recently touched menu that lists checked out documents and recently touched objects. [lgraf]
 - Sort the entries of the reference browser widget. [tarnap]
 - Drop non-word meeting feature. [deiferni]
