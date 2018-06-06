@@ -2,6 +2,7 @@ from ftw.testbrowser import browsing
 from opengever.task.browser.transitioncontroller import TaskTransitionController
 from opengever.tasktemplates.interfaces import IFromTasktemplateGenerated
 from opengever.testing import IntegrationTestCase
+from plone import api
 from zope.interface import alsoProvides
 import unittest
 
@@ -92,6 +93,15 @@ class TestCancelledOpenGuard(IntegrationTestCase):
         self.assertIn(self.transition, browser.css('.agency_buttons a').text)
         self.assertNotIn(
             self.transition, browser.css('.regular_buttons a').text)
+
+    def test_not_available_if_dossier_is_closed(self):
+        self.login(self.administrator)
+        self.set_workflow_state('task-state-cancelled', self.task)
+        api.content.transition(obj=self.dossier,
+                               transition='dossier-transition-resolve')
+
+        self.assertNotIn(
+            self.transition, self.get_workflow_transitions_for(self.task))
 
 
 class TestOpenCancelledGuard(IntegrationTestCase):
