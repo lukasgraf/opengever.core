@@ -239,28 +239,36 @@ class TestCommitteesTab(IntegrationTestCase):
         self.assertEquals(meeting.get_url(), next_meeting.get('href'))
 
     @browsing
-    def test_visible_fields_in_forms(self, browser):
+    def test_visible_fields_in_committee_container_forms(self, browser):
         """Some fields should only be displayed when the word feature is
         disabled.
         Therefore we test the appearance of all fields.
         """
-        fields = ['Title',
-                  'Protocol header template',
-                  'Protocol suffix template',
-                  'Agenda item header template for the protocol',
-                  'Agenda item suffix template for the protocol',
-                  'Excerpt header template',
-                  'Excerpt suffix template',
-                  'Agendaitem list template',
-                  'Table of contents template',
-                  'Ad hoc agenda item template',
-                  'Paragraph template']
+        fields = [u'Title',
+                  u'Protocol header template',
+                  u'Protocol suffix template',
+                  u'Agenda item header template for the protocol',
+                  u'Agenda item suffix template for the protocol',
+                  u'Excerpt header template',
+                  u'Excerpt suffix template',
+                  u'Agendaitem list template',
+                  u'Table of contents template',
+                  u'Ad hoc agenda item template',
+                  u'Paragraph template']
 
         self.login(self.manager, browser)
 
         browser.open()
         factoriesmenu.add('Committee Container')
-        self.assertEquals(fields, browser.css('form#form > div.field > label').text)
+        self.assertEquals(fields, [
+            text
+            for text in browser.css('form#form div.field > label').text
+            if len(text)
+        ])
 
         browser.open(self.committee_container, view='edit')
-        self.assertEquals(fields, browser.css('form#form > div.field > label').text)
+        self.assertEquals(fields, [
+            text
+            for text in browser.css('form#form div.field > label').text
+            if len(text)
+        ])

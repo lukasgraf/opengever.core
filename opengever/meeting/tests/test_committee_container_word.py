@@ -70,7 +70,7 @@ class TestCommitteeContainer(IntegrationTestCase):
                          browser.context.get_excerpt_suffix_template())
 
     @browsing
-    def test_visible_fields_in_forms(self, browser):
+    def test_visible_fields_in_committee_container_forms(self, browser):
         """Some fields should only be displayed when the word feature is
         enabled.
         Therefore we test the appearance of all fields.
@@ -90,7 +90,15 @@ class TestCommitteeContainer(IntegrationTestCase):
 
         browser.open()
         factoriesmenu.add('Committee Container')
-        self.assertEquals(fields, browser.css('form#form > div.field > label').text)
+        self.assertEquals(fields, [
+            text
+            for text in browser.css('form#form div.field > label').text
+            if len(text)
+        ])
 
         browser.open(self.committee_container, view='edit')
-        self.assertEquals(fields, browser.css('form#form > div.field > label').text)
+        self.assertEquals(fields, [
+            text
+            for text in browser.css('form#form div.field > label').text
+            if len(text)
+        ])
