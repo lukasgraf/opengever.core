@@ -44,6 +44,7 @@ class TestProposalWithWord(IntegrationTestCase):
             [['Title', u'Baugesuch Kreuzachkreisel'],
              ['Committee', u'Rechnungspr\xfcfungskommission'],
              ['Meeting', ''],
+             ['Issuer', 'Ziegler Robert (robert.ziegler)'],
              ['Proposal document',
               'Baugesuch Kreuzachkreisel'],
              ['State', 'Pending'],
@@ -80,6 +81,7 @@ class TestProposalWithWord(IntegrationTestCase):
              ['Committee', u'Rechnungspr\xfcfungskommission'],
              ['Dossier', u'Vertr\xe4ge mit der kantonalen Finanzverwaltung'],
              ['Meeting', ''],
+             ['Issuer', 'Ziegler Robert (robert.ziegler)'],
              ['Proposal document',
               u'\xc4nderungen am Personalreglement'],
              ['State', 'Submitted'],
@@ -296,6 +298,7 @@ class TestProposalWithWord(IntegrationTestCase):
             [['Title', u'\xc4nderungen am Personalreglement zur Nachpr\xfcfung'],
              ['Committee', u'Rechnungspr\xfcfungskommission'],
              ['Meeting', ''],
+             ['Issuer', 'Ziegler Robert (robert.ziegler)'],
              ['Proposal document',
               u'\xc4nderungen am Personalreglement zur Nachpr\xfcfung'],
              ['State', 'Pending'],
@@ -313,6 +316,7 @@ class TestProposalWithWord(IntegrationTestCase):
             [['Title', u'\xc4nderungen am Personalreglement'],
              ['Committee', u'Rechnungspr\xfcfungskommission'],
              ['Meeting', u'9. Sitzung der Rechnungspr\xfcfungskommission'],
+             ['Issuer', 'Ziegler Robert (robert.ziegler)'],
              ['Proposal document', u'\xc4nderungen am Personalreglement'],
              ['State', 'Decided'],
              ['Decision number', '2016 / 2'],
@@ -416,3 +420,38 @@ class TestProposalWithWord(IntegrationTestCase):
         self.login(self.meeting_user, browser)
         browser.open(self.submitted_word_proposal, view='tabbedview_view-overview')
         self.assertFalse(browser.find('Reject'))
+
+    @browsing
+    def test_issuer_is_prefilled_with_the_currently_logged_in_user(self, browser):
+        self.login(self.committee_responsible, browser)
+        browser.open(self.dossier)
+        factoriesmenu.add('Proposal')
+
+        field = browser.find_field_by_text('Issuer')
+        self.assertEqual(self.committee_responsible.id, field.value)
+        self.assertEqual(u'M\xfcller Fr\xe4nzi (franzi.muller)', field.text)
+
+    @browsing
+    def test_issuer_can_be_changed(self, browser):
+        self.login(self.committee_responsible, browser)
+        browser.open(self.dossier)
+        factoriesmenu.add('Proposal')
+
+        browser.fill(
+            {'Title': u'Baugesuch Kreuzachkreisel',
+             'Committee': u'Rechnungspr\xfcfungskommission',
+             'Proposal template': u'Geb\xfchren',
+             'Edit after creation': False})
+
+        form = browser.find_form_by_field('Issuer')
+        form.find_widget('Issuer').fill(self.dossier_responsible.id)
+        form.save()
+
+        self.assertEqual(self.dossier_responsible.id, browser.context.issuer)
+
+    @browsing
+    def test_issuer_is_not_visible_on_submitted_proposal_edit_form(self, browser):
+        self.login(self.committee_responsible, browser)
+        browser.open(self.submitted_word_proposal, view="edit")
+
+        self.assertIsNone(browser.find_field_by_text('Issuer'))

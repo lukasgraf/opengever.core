@@ -9,6 +9,7 @@ class ModelProxyAddForm(object):
 
     content_type = None
     fields = None
+    allow_prefill_from_GET_request = True
 
     def render(self):
         assert self.fields, 'must specify model fields to render!'
