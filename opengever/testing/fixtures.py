@@ -826,6 +826,7 @@ class OpengeverContentFixture(object):
                 .having(
                     title=u'Vertragsentwurf f\xfcr weitere Bearbeitung bewilligen',
                     committee=self.committee.load_model(),
+                    issuer=self.dossier_responsible.getId(),
                     )
                 .relate_to(self.document)
                 .as_submitted()
@@ -842,6 +843,7 @@ class OpengeverContentFixture(object):
                 .having(
                     title=u'Antrag f\xfcr Kreiselbau',
                     committee=self.empty_committee.load_model(),
+                    issuer=self.dossier_responsible.getId(),
                     )
                 ))
 
@@ -851,6 +853,7 @@ class OpengeverContentFixture(object):
                 .having(
                     title=u'Initialvertrag f\xfcr Bearbeitung',
                     committee=self.committee.load_model(),
+                    issuer=self.dossier_responsible.getId(),
                     )
                 .as_submitted()
                 )
@@ -888,6 +891,7 @@ class OpengeverContentFixture(object):
                 .having(
                     title=u'\xdcberarbeitung der GAV',
                     committee=self.empty_committee.load_model(),
+                    issuer=self.dossier_responsible.getId(),
                     )
                 ))
 
