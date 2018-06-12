@@ -123,6 +123,12 @@ class ProtocolOperations(object):
                  'successfully.',
                  mapping=dict(title=meeting.get_title()))
 
+    def get_not_updated_message(self, meeting):
+        return _(u'Protocol for meeting ${title} has not been updated. '
+                 'The protocol has been modified manually and these modifications '
+                 'will be lost if you regenerate the protocol.',
+                 mapping=dict(title=meeting.get_title()))
+
     def get_title(self, meeting):
         return meeting.get_protocol_title()
 
@@ -232,24 +238,33 @@ class MergeDocxProtocolCommand(CreateGeneratedDocumentCommand):
             context, meeting, document_operations)
 
         self.has_protocol = meeting.protocol_document is not None
+        self.protocol_updated = False
 
-    def execute(self):
+    def execute(self, overwrite=False):
         if self.has_protocol:
-            return self.update_protocol_document()
+            return self.update_protocol_document(overwrite)
 
         return super(MergeDocxProtocolCommand, self).execute()
 
     def show_message(self):
-        if self.has_protocol:
-            portal = api.portal.get()
+        if not self.has_protocol:
+            return super(MergeDocxProtocolCommand, self).show_message()
+
+        portal = api.portal.get()
+        if self.protocol_updated:
             api.portal.show_message(
                 self.document_operations.get_updated_message(self.meeting),
                 portal.REQUEST)
+        else:
+            api.portal.show_message(
+                self.document_operations.get_not_updated_message(self.meeting),
+                portal.REQUEST)
+        return
+
+    def update_protocol_document(self, overwrite=False):
+        if self.meeting.protocol_manually_edited() and not overwrite:
             return
 
-        return super(MergeDocxProtocolCommand, self).show_message()
-
-    def update_protocol_document(self):
         document = self.meeting.protocol_document.resolve_document()
         document.update_file(self.generate_file_data())
 
@@ -263,7 +278,7 @@ class MergeDocxProtocolCommand(CreateGeneratedDocumentCommand):
         self.meeting.protocol_document.generated_version = new_version
         document.setModificationDate(DateTime())
         document.reindexObject(idxs=['modified'])
-
+        self.protocol_updated = True
         return document
 
     def generate_file_data(self):
