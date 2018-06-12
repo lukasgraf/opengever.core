@@ -175,7 +175,7 @@ class Meeting(Base, SQLFormSupport):
             return False
         self.protocol_document.generated_version
         document = self.protocol_document.resolve_document()
-        return self.protocol_document.generated_version != document.version_id
+        return self.protocol_document.generated_version != document.get_current_version_id(True)
 
     def get_other_participants_list(self):
         if self.other_participants is not None:
