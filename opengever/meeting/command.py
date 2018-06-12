@@ -174,15 +174,13 @@ class AgendaItemListOperations(object):
 class CreateGeneratedDocumentCommand(CreateDocumentCommand):
     """Document generation workflow."""
 
-    def __init__(self, context, meeting, document_operations,
-                 lock_document_after_creation=False):
+    def __init__(self, context, meeting, document_operations):
         """Data will be initialized lazily since it is only available after the
         document has been generated in `execute`.
 
         """
         self.meeting = meeting
         self.document_operations = document_operations
-        self.lock_document_after_creation = lock_document_after_creation
 
         super(CreateGeneratedDocumentCommand, self).__init__(
             context, filename=None, data=None,
@@ -203,15 +201,8 @@ class CreateGeneratedDocumentCommand(CreateDocumentCommand):
             )
 
         document = super(CreateGeneratedDocumentCommand, self).execute()
-        self.lock_document(document)
         self.add_database_entry(document)
         return document
-
-    def lock_document(self, document):
-        if not self.lock_document_after_creation:
-            return
-
-        ILockable(document).lock(SYS_LOCK)
 
     def add_database_entry(self, document):
         session = create_session()
@@ -236,11 +227,9 @@ class MergeDocxProtocolCommand(CreateGeneratedDocumentCommand):
     Then append all partial protocols for each agenda item in sequential order.
     """
 
-    def __init__(self, context, meeting, document_operations,
-                 lock_document_after_creation=False):
+    def __init__(self, context, meeting, document_operations):
         super(MergeDocxProtocolCommand, self).__init__(
-            context, meeting, document_operations,
-            lock_document_after_creation=lock_document_after_creation)
+            context, meeting, document_operations)
 
         self.has_protocol = meeting.protocol_document is not None
 
